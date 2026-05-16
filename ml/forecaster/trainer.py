@@ -1,8 +1,8 @@
-from fin_pilot_ml.forecaster.data_loader import ForecastingDataLoader
-from fin_pilot_ml.forecaster.evaluator import ForecastEvaluator
-from fin_pilot_ml.forecaster.model import TransactionForecaster
-from fin_pilot_ml.forecaster.preprocessing import ForecastPreprocessor
-from fin_pilot_ml.config import ml_settings
+from ml.forecaster.data_loader import ForecastingDataLoader
+from ml.forecaster.evaluator import ForecastEvaluator
+from ml.forecaster.model import TransactionForecaster
+from ml.forecaster.preprocessing import ForecastPreprocessor
+from ml.config import ml_settings
 
 
 class ForecastTrainer:

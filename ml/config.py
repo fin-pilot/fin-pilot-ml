@@ -71,7 +71,7 @@ class MLSettings(BaseModel):
     forecaster: ForecasterConfig
 
 
-_CONFIGS_DIR = Path(__file__).parent.parent.parent / "configs"
+_CONFIGS_DIR = Path(__file__).parent.parent / "configs"
 
 
 def _load_yaml(path: Path) -> dict:

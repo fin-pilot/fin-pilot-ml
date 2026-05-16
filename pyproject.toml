@@ -33,6 +33,9 @@ dev = ["black", "pylint"]
 line-length = 80
 skip-string-normalization = false
 
+[tool.setuptools.packages.find]
+include = ["ml*"]
+
 [project.scripts]
-train-categorizer = "fin_pilot_ml.categorizer.trainer:main"
-train-forecaster = "fin_pilot_ml.forecaster.trainer:main"
+train-categorizer = "ml.categorizer.trainer:main"
+train-forecaster = "ml.forecaster.trainer:main"

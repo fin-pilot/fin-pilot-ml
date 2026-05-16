@@ -3,7 +3,7 @@ from typing import cast
 import pandas as pd
 from datasets import load_dataset
 
-from fin_pilot_ml.config import ml_settings
+from ml.config import ml_settings
 
 
 class CategorizerDataLoader:

@@ -3,7 +3,7 @@ from pathlib import Path
 import kagglehub
 import pandas as pd
 
-from fin_pilot_ml.config import ml_settings
+from ml.config import ml_settings
 
 _EMPTY_DF = pd.DataFrame(
     columns=["transaction_date", "amount", "transaction_type"]

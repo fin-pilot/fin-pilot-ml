@@ -1,10 +1,10 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from fin_pilot_ml.categorizer.data_loader import CategorizerDataLoader
-from fin_pilot_ml.categorizer.evaluator import CategorizerEvaluator
-from fin_pilot_ml.categorizer.model import TransactionCategorizer
-from fin_pilot_ml.config import ml_settings
+from ml.categorizer.data_loader import CategorizerDataLoader
+from ml.categorizer.evaluator import CategorizerEvaluator
+from ml.categorizer.model import TransactionCategorizer
+from ml.config import ml_settings
 
 
 class CategorizerTrainer:
