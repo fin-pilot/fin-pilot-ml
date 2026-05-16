@@ -155,7 +155,7 @@ class TransactionForecaster:
     def save_model(self) -> None:
         model_path = self._model_path
 
-        model_path.parent.mkdir(parents=True, exist_ok=True)
+        model_path.parent.parent.parent.mkdir(parents=True, exist_ok=True)
 
         print(f"Saving forecasting model to {model_path}")
 
