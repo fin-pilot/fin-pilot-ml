@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 
 import joblib
@@ -8,17 +7,15 @@ from sklearn.svm import LinearSVC
 
 from fin_pilot_ml.config import MLSettings
 
-logger = logging.getLogger(__name__)
-
 
 class TransactionCategorizer:
     def __init__(self, config: MLSettings) -> None:
         self.config = config
-        logger.info("Initializing transaction categorizer.")
+        print("Initializing transaction categorizer.")
         self.pipeline = self._build_pipeline()
 
     def train(self, x_train: list[str], y_train: list[str]) -> None:
-        logger.info("Training transaction categorizer...")
+        print("Training transaction categorizer...")
         self.pipeline.fit(x_train, y_train)
 
     def predict(self, texts: list[str]) -> list[str]:
@@ -28,15 +25,20 @@ class TransactionCategorizer:
     def save_model(self) -> None:
         model_path = self._model_path
         model_path.parent.mkdir(parents=True, exist_ok=True)
-        logger.info("Saving model to %s", model_path)
+
+        print(f"Saving model to {model_path}")
+
         joblib.dump(self.pipeline, model_path)
 
     def load_model(self) -> None:
         model_path = self._model_path
+
         if not model_path.exists():
-            logger.warning("Model file not found: %s", model_path)
+            print(f"Model file not found: {model_path}")
             return
-        logger.info("Loading model from %s", model_path)
+
+        print(f"Loading model from {model_path}")
+
         self.pipeline = joblib.load(model_path)
 
     @property
@@ -53,6 +55,7 @@ class TransactionCategorizer:
 
     def _create_vectorizer(self) -> TfidfVectorizer:
         cfg = self.config.categorizer.tfidf
+
         return TfidfVectorizer(
             analyzer=cfg.analyzer,
             ngram_range=cfg.ngram_range,
@@ -62,6 +65,7 @@ class TransactionCategorizer:
 
     def _create_classifier(self) -> LinearSVC:
         cfg = self.config.categorizer.svm
+
         return LinearSVC(
             class_weight=cfg.class_weight,
             max_iter=cfg.max_iter,

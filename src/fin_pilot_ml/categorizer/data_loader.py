@@ -1,4 +1,3 @@
-import logging
 from typing import cast
 
 import pandas as pd
@@ -6,15 +5,13 @@ from datasets import load_dataset
 
 from fin_pilot_ml.config import ml_settings
 
-logger = logging.getLogger(__name__)
-
 
 class CategorizerDataLoader:
     def __init__(self) -> None:
         self.dataset_name = ml_settings.categorizer.dataset.name
 
     def load(self) -> tuple[pd.Series, pd.Series]:
-        logger.info("Loading dataset: %s", self.dataset_name)
+        print(f"Loading dataset: {self.dataset_name}")
 
         dataset = load_dataset(self.dataset_name)
 
@@ -25,6 +22,6 @@ class CategorizerDataLoader:
             df["transaction_description"].astype(str).str.lower().str.strip()
         )
 
-        logger.info("Loaded %s cleaned samples.", len(df))
+        print(f"Loaded {len(df)} cleaned samples.")
 
         return df["description"], df["category"]

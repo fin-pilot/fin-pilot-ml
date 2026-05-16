@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass
 
 import numpy as np
@@ -12,8 +11,6 @@ from sklearn.metrics import (
     recall_score,
 )
 from sklearn.pipeline import Pipeline
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -34,7 +31,7 @@ class CategorizerEvaluator:
         y_test: pd.Series,
         show_confusion_matrix: bool = False,
     ) -> EvaluationMetrics:
-        logger.info("Evaluating categorizer model...")
+        print("Evaluating categorizer model...")
 
         y_pred = model.predict(x_test)
 
@@ -47,24 +44,24 @@ class CategorizerEvaluator:
         )
         f1 = f1_score(y_test, y_pred, average="weighted", zero_division=0)
 
-        logger.info("Accuracy : %.4f", accuracy)
-        logger.info("Precision: %.4f", precision)
-        logger.info("Recall   : %.4f", recall)
-        logger.info("F1 Score : %.4f", f1)
+        print(f"Accuracy : {accuracy:.4f}")
+        print(f"Precision: {precision:.4f}")
+        print(f"Recall   : {recall:.4f}")
+        print(f"F1 Score : {f1:.4f}")
 
         report: dict = classification_report(
             y_test, y_pred, output_dict=True, zero_division=0
         )
 
-        logger.info(
-            "\nClassification Report:\n%s",
-            classification_report(y_test, y_pred, zero_division=0),
+        print(
+            "\nClassification Report:\n"
+            f"{classification_report(y_test, y_pred, zero_division=0)}"
         )
 
         cm = None
         if show_confusion_matrix:
             cm = confusion_matrix(y_test, y_pred)
-            logger.info("Confusion matrix:\n%s", cm)
+            print(f"Confusion matrix:\n{cm}")
 
         return EvaluationMetrics(
             accuracy=accuracy,

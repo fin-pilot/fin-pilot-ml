@@ -1,5 +1,3 @@
-import logging
-
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -7,8 +5,6 @@ from fin_pilot_ml.categorizer.data_loader import CategorizerDataLoader
 from fin_pilot_ml.categorizer.evaluator import CategorizerEvaluator
 from fin_pilot_ml.categorizer.model import TransactionCategorizer
 from fin_pilot_ml.config import ml_settings
-
-logger = logging.getLogger(__name__)
 
 
 class CategorizerTrainer:
@@ -19,7 +15,7 @@ class CategorizerTrainer:
         self.model = TransactionCategorizer(self.config)
 
     def run(self) -> None:
-        logger.info("Starting categorizer training pipeline.")
+        print("Starting categorizer training pipeline.")
 
         x, y = self.data_loader.load()
         x_train, x_test, y_train, y_test = self._split_data(x, y)
@@ -32,12 +28,12 @@ class CategorizerTrainer:
             y_test=y_test,
         )
 
-        logger.info("Final F1   : %.4f", metrics.f1_score)
-        logger.info("Final Acc  : %.4f", metrics.accuracy)
+        print(f"Final F1   : {metrics.f1_score:.4f}")
+        print(f"Final Acc  : {metrics.accuracy:.4f}")
 
         self.model.save_model()
 
-        logger.info("Categorizer training completed.")
+        print("Categorizer training completed.")
 
     def _split_data(
         self,

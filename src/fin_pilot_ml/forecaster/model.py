@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 from typing import Any
 
@@ -10,20 +9,18 @@ from statsmodels.tsa.stattools import adfuller
 
 from fin_pilot_ml.config import MLSettings
 
-logger = logging.getLogger(__name__)
-
 
 class TransactionForecaster:
     def __init__(self, config: MLSettings) -> None:
         self.config = config
         self.sarima_config = self.config.forecaster.sarima
 
-        logger.info("Initializing transaction forecaster.")
+        print("Initializing transaction forecaster.")
 
         self.model: ARIMA | None = None
 
     def fit(self, series: pd.Series) -> None:
-        logger.info("Starting SARIMA parameter search...")
+        print("Starting SARIMA parameter search...")
 
         prepared_series = self._prepare_series(series)
 
@@ -43,14 +40,12 @@ class TransactionForecaster:
         min_required = seasonal_period * 2
 
         if seasonal_enabled and len(prepared_series) < min_required:
-            logger.warning(
+            print(
                 (
                     "Series too short for seasonal SARIMA "
-                    "(len=%s, required=%s). "
+                    f"(len={len(prepared_series)}, required={min_required}). "
                     "Falling back to non-seasonal ARIMA."
-                ),
-                len(prepared_series),
-                min_required,
+                )
             )
 
             seasonal_enabled = False
@@ -91,10 +86,9 @@ class TransactionForecaster:
             )
 
         except ValueError as error:
-            logger.warning(
-                "SARIMA fitting failed (%s). "
-                "Retrying with simpler non-seasonal ARIMA.",
-                error,
+            print(
+                f"SARIMA fitting failed ({error}). "
+                "Retrying with simpler non-seasonal ARIMA."
             )
 
             fallback_kwargs = {
@@ -125,17 +119,17 @@ class TransactionForecaster:
         if self.model is None:
             raise ValueError("SARIMA model fitting failed.")
 
-        logger.info(
-            "Model fitted successfully. Order=%s Seasonal=%s",
-            self.model.order,
-            self.model.seasonal_order,
+        print(
+            "Model fitted successfully. "
+            f"Order={self.model.order} "
+            f"Seasonal={self.model.seasonal_order}"
         )
 
     def update(self, new_series: pd.Series) -> None:
         if self.model is None:
             raise ValueError("Model is not initialized.")
 
-        logger.info("Updating forecasting model...")
+        print("Updating forecasting model...")
 
         prepared_series = self._prepare_series(new_series)
 
@@ -146,7 +140,8 @@ class TransactionForecaster:
             raise ValueError("Model is not initialized.")
 
         forecast_vals, conf_int = self.model.predict(
-            n_periods=steps, return_conf_int=True
+            n_periods=steps,
+            return_conf_int=True,
         )
 
         return pd.DataFrame(
@@ -162,7 +157,7 @@ class TransactionForecaster:
 
         model_path.parent.mkdir(parents=True, exist_ok=True)
 
-        logger.info("Saving forecasting model to %s", model_path)
+        print(f"Saving forecasting model to {model_path}")
 
         joblib.dump(self.model, model_path)
 
@@ -170,10 +165,10 @@ class TransactionForecaster:
         model_path = self._model_path
 
         if not model_path.exists():
-            logger.warning("Forecasting model not found: %s", model_path)
+            print(f"Forecasting model not found: {model_path}")
             return
 
-        logger.info("Loading forecasting model from %s", model_path)
+        print(f"Loading forecasting model from {model_path}")
 
         self.model = joblib.load(model_path)
 
@@ -189,8 +184,8 @@ class TransactionForecaster:
 
         is_stationary = bool(p_value < 0.05)
 
-        logger.info("ADF p-value: %.4f", p_value)
-        logger.info("Stationary: %s", is_stationary)
+        print(f"ADF p-value: {p_value:.4f}")
+        print(f"Stationary: {is_stationary}")
 
         return is_stationary
 

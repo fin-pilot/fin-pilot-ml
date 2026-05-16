@@ -1,10 +1,7 @@
-import logging
 from typing import Literal
 
 import numpy as np
 import pandas as pd
-
-logger = logging.getLogger(__name__)
 
 
 class ForecastPreprocessor:
@@ -13,6 +10,7 @@ class ForecastPreprocessor:
             return df
 
         df = df.drop_duplicates()
+
         df = df.sort_values(by="transaction_date").reset_index(drop=True)
 
         return df
@@ -23,6 +21,7 @@ class ForecastPreprocessor:
 
         q1 = df["y"].quantile(0.25)
         q3 = df["y"].quantile(0.75)
+
         iqr = q3 - q1
 
         lower_bound = max(0.0, q1 - 1.5 * iqr)
@@ -33,12 +32,16 @@ class ForecastPreprocessor:
         ].copy()
 
         removed = len(df) - len(filtered_df)
+
         if removed:
-            logger.info("Removed %s outliers.", removed)
+            print(f"Removed {removed} outliers.")
 
         return filtered_df
 
-    def aggregate_daily_expenses(self, df: pd.DataFrame) -> pd.DataFrame:
+    def aggregate_daily_expenses(
+        self,
+        df: pd.DataFrame,
+    ) -> pd.DataFrame:
         expenses = df[df["transaction_type"] == "expense"].copy()
 
         if expenses.empty:
@@ -58,12 +61,17 @@ class ForecastPreprocessor:
 
         return weekly.reset_index()
 
-    def create_balance_series(self, df: pd.DataFrame) -> pd.DataFrame:
+    def create_balance_series(
+        self,
+        df: pd.DataFrame,
+    ) -> pd.DataFrame:
         if df.empty:
             return pd.DataFrame(columns=["ds", "y"])
 
         df = df.copy()
+
         df["ds"] = df["transaction_date"].dt.normalize()
+
         df["net_amount"] = np.where(
             df["transaction_type"] == "expense",
             df["amount"],
@@ -78,9 +86,13 @@ class ForecastPreprocessor:
             freq="D",
         )
 
-        daily_net = daily_net.reindex(idx, fill_value=0.0)
+        daily_net = daily_net.reindex(
+            idx,
+            fill_value=0.0,
+        )
 
         balance = daily_net.cumsum().reset_index()
+
         balance.columns = pd.Index(["ds", "y"])
 
         return balance
