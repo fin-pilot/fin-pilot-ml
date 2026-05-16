@@ -8,10 +8,7 @@ import pmdarima as pm
 from pmdarima.arima import ARIMA
 from statsmodels.tsa.stattools import adfuller
 
-from shared.config import MLSettings
-from shared.logging import setup_logging
-
-setup_logging()
+from fin_pilot_ml.config import MLSettings
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,8 @@
 import logging
 from dataclasses import dataclass
-from typing import Any, cast
 
+import numpy as np
+import pandas as pd
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -10,10 +11,7 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
 )
-
-from shared.logging import setup_logging
-
-setup_logging()
+from sklearn.pipeline import Pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -25,70 +23,48 @@ class EvaluationMetrics:
     recall: float
     f1_score: float
     report: dict
-    confusion_matrix: object | None
+    confusion_matrix: np.ndarray | None
 
 
 class CategorizerEvaluator:
     def evaluate(
         self,
-        model,
-        x_test,
-        y_test,
+        model: Pipeline,
+        x_test: pd.Series,
+        y_test: pd.Series,
         show_confusion_matrix: bool = False,
     ) -> EvaluationMetrics:
-        logger.info("Evaluating model...")
+        logger.info("Evaluating categorizer model...")
 
         y_pred = model.predict(x_test)
 
         accuracy = accuracy_score(y_test, y_pred)
         precision = precision_score(
-            y_test,
-            y_pred,
-            average="weighted",
-            zero_division=0,  # pyright: ignore[reportArgumentType]
+            y_test, y_pred, average="weighted", zero_division=0
         )
         recall = recall_score(
-            y_test,
-            y_pred,
-            average="weighted",
-            zero_division=0,  # pyright: ignore[reportArgumentType]
+            y_test, y_pred, average="weighted", zero_division=0
         )
-        f1 = f1_score(
-            y_test,
-            y_pred,
-            average="weighted",
-            zero_division=0,  # pyright: ignore[reportArgumentType]
-        )
+        f1 = f1_score(y_test, y_pred, average="weighted", zero_division=0)
 
         logger.info("Accuracy : %.4f", accuracy)
         logger.info("Precision: %.4f", precision)
         logger.info("Recall   : %.4f", recall)
         logger.info("F1 Score : %.4f", f1)
 
-        text_report = classification_report(
-            y_test,
-            y_pred,
-            zero_division=0,  # pyright: ignore[reportArgumentType]
+        report: dict = classification_report(
+            y_test, y_pred, output_dict=True, zero_division=0
         )
 
-        logger.info("\nClassification Report:\n%s", text_report)
-
-        report = cast(
-            dict[str, Any],
-            classification_report(
-                y_test,
-                y_pred,
-                output_dict=True,
-                zero_division=0,  # pyright: ignore[reportArgumentType]
-            ),
+        logger.info(
+            "\nClassification Report:\n%s",
+            classification_report(y_test, y_pred, zero_division=0),
         )
 
         cm = None
         if show_confusion_matrix:
             cm = confusion_matrix(y_test, y_pred)
-
-            logger.info("Confusion matrix generated.")
-            logger.info("\n%s", cm)
+            logger.info("Confusion matrix:\n%s", cm)
 
         return EvaluationMetrics(
             accuracy=accuracy,

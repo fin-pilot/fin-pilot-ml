@@ -1,6 +1,6 @@
 forecaster:
   dataset: 
-    name: mitulshah/transaction-categorization
+    name: artemkabseu/financial-transactions-dataset-expenses-and-income
 
   model:
     path: ml/artifacts/forecaster.pkl

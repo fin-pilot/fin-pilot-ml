@@ -3,38 +3,25 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pfms-backend"
+name = "fin-pilot-ml"
 version = "1.0.0"
-description = "Backend API for the Personal Finance Management System with ML capabilities"
+description = "ML pipelines for transaction categorization and SARIMA-based expense forecasting"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "Oleksii Palamarchuk", email = "oleksiypalamarchuck@gmail.com" },
 ]
 dependencies = [
-    "python-multipart",
-    "fastapi",
-    "fastapi-utils",
-    "uvicorn[standard]",
-    "sqlalchemy",
-    "sqlalchemy_utils",
-    "alembic",
-    "psycopg2-binary",
-    "python-jose[cryptography]",
-    "pwdlib[argon2,bcrypt]",
-    "pydantic[email]",
-    "pydantic-settings",
     "pandas",
+    "numpy",
     "scikit-learn",
     "statsmodels",
-    "pyarrow",
-    "joblib",
-    "datasets",
-    "pyyaml",
-    "python-dotenv",
     "pmdarima",
+    "joblib",
+    "pyarrow",
+    "datasets",
     "kagglehub",
-    "typing-inspect",
+    "pydantic",
 ]
 
 [project.optional-dependencies]
@@ -43,3 +30,7 @@ dev = ["black", "pylint"]
 [tool.black]
 line-length = 80
 skip-string-normalization = false
+
+[project.scripts]
+train-categorizer = "fin_pilot_ml.categorizer.trainer:main"
+train-forecaster = "fin_pilot_ml.forecaster.trainer:main"
