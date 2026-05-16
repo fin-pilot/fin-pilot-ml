@@ -3,7 +3,7 @@ categorizer:
     name: mitulshah/transaction-categorization
 
   model:
-    path: artifacts/categorizer.pkl
+    path: artifacts/categorizer/categorizer.pkl
 
   tfidf:
     analyzer: char_wb

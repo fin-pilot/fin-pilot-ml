@@ -19,7 +19,7 @@ class TransactionForecaster:
 
         self.model: ARIMA | None = None
 
-    def fit(self, series: pd.Series) -> None:
+    def train(self, series: pd.Series) -> None:
         print("Starting SARIMA parameter search...")
 
         prepared_series = self._prepare_series(series)
@@ -41,48 +41,21 @@ class TransactionForecaster:
 
         if seasonal_enabled and len(prepared_series) < min_required:
             print(
-                (
-                    "Series too short for seasonal SARIMA "
-                    f"(len={len(prepared_series)}, required={min_required}). "
-                    "Falling back to non-seasonal ARIMA."
-                )
+                f"Series too short for seasonal SARIMA "
+                f"(len={len(prepared_series)}, required={min_required}). "
+                "Falling back to non-seasonal ARIMA."
             )
 
             seasonal_enabled = False
             seasonal_period = 0
 
         try:
-            auto_arima_kwargs = {
-                "seasonal": seasonal_enabled,
-                "m": seasonal_period if seasonal_enabled else 1,
-                "start_p": 0,
-                "start_q": 0,
-                "max_p": self.sarima_config.max_p,
-                "max_q": self.sarima_config.max_q,
-                "max_d": self.sarima_config.max_d,
-                "start_P": 0,
-                "start_Q": 0,
-                "max_P": self.sarima_config.max_P,
-                "max_Q": self.sarima_config.max_Q,
-                "max_D": self.sarima_config.max_D,
-                "stepwise": self.sarima_config.stepwise,
-                "trace": self.sarima_config.trace,
-                "error_action": self.sarima_config.error_action,
-                "suppress_warnings": self.sarima_config.suppress_warnings,
-                "information_criterion": (
-                    self.sarima_config.information_criterion
-                ),
-                "with_intercept": "auto",
-                "stationary": False,
-                "n_jobs": self.sarima_config.n_jobs,
-            }
-
-            if self.sarima_config.max_order is not None:
-                auto_arima_kwargs["max_order"] = self.sarima_config.max_order
-
             self.model = pm.auto_arima(
                 prepared_series,
-                **auto_arima_kwargs,
+                **self._build_arima_kwargs(
+                    seasonal=seasonal_enabled,
+                    seasonal_period=seasonal_period,
+                ),
             )
 
         except ValueError as error:
@@ -91,29 +64,12 @@ class TransactionForecaster:
                 "Retrying with simpler non-seasonal ARIMA."
             )
 
-            fallback_kwargs = {
-                "seasonal": False,
-                "m": 1,
-                "start_p": 0,
-                "start_q": 0,
-                "max_p": self.sarima_config.max_p,
-                "max_q": self.sarima_config.max_q,
-                "max_d": self.sarima_config.max_d,
-                "stepwise": self.sarima_config.stepwise,
-                "trace": self.sarima_config.trace,
-                "error_action": self.sarima_config.error_action,
-                "suppress_warnings": self.sarima_config.suppress_warnings,
-                "with_intercept": "auto",
-                "stationary": False,
-                "n_jobs": self.sarima_config.n_jobs,
-            }
-
-            if self.sarima_config.max_order is not None:
-                fallback_kwargs["max_order"] = self.sarima_config.max_order
-
             self.model = pm.auto_arima(
                 prepared_series,
-                **fallback_kwargs,
+                **self._build_arima_kwargs(
+                    seasonal=False,
+                    seasonal_period=0,
+                ),
             )
 
         if self.model is None:
@@ -135,7 +91,7 @@ class TransactionForecaster:
 
         self.model.update(prepared_series)
 
-    def forecast(self, steps: int = 30) -> pd.DataFrame:
+    def predict(self, steps: int = 30) -> pd.DataFrame:
         if self.model is None:
             raise ValueError("Model is not initialized.")
 
@@ -155,7 +111,7 @@ class TransactionForecaster:
     def save_model(self) -> None:
         model_path = self._model_path
 
-        model_path.parent.parent.mkdir(parents=True, exist_ok=True)
+        model_path.parent.mkdir(parents=True, exist_ok=True)
 
         print(f"Saving forecasting model to {model_path}")
 
@@ -189,6 +145,10 @@ class TransactionForecaster:
 
         return is_stationary
 
+    @property
+    def _model_path(self) -> Path:
+        return Path(self.config.forecaster.model.path)
+
     def _prepare_series(self, series: pd.Series) -> pd.Series:
         prepared = series.copy()
 
@@ -202,6 +162,35 @@ class TransactionForecaster:
 
         return prepared
 
-    @property
-    def _model_path(self) -> Path:
-        return Path(self.config.forecaster.model.path)
+    def _build_arima_kwargs(
+        self,
+        seasonal: bool,
+        seasonal_period: int,
+    ) -> dict:
+        kwargs: dict = {
+            "seasonal": seasonal,
+            "m": seasonal_period if seasonal else 1,
+            "start_p": 0,
+            "start_q": 0,
+            "max_p": self.sarima_config.max_p,
+            "max_q": self.sarima_config.max_q,
+            "max_d": self.sarima_config.max_d,
+            "start_P": 0,
+            "start_Q": 0,
+            "max_P": self.sarima_config.max_P,
+            "max_Q": self.sarima_config.max_Q,
+            "max_D": self.sarima_config.max_D,
+            "stepwise": self.sarima_config.stepwise,
+            "trace": self.sarima_config.trace,
+            "error_action": self.sarima_config.error_action,
+            "suppress_warnings": self.sarima_config.suppress_warnings,
+            "information_criterion": self.sarima_config.information_criterion,
+            "with_intercept": False,
+            "stationary": False,
+            "n_jobs": self.sarima_config.n_jobs,
+        }
+
+        if self.sarima_config.max_order is not None:
+            kwargs["max_order"] = self.sarima_config.max_order
+
+        return kwargs

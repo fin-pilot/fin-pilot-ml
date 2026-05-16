@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from ml.forecaster.model import TransactionForecaster
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 from ml.forecaster.data_loader import ForecastingDataLoader
+from ml.forecaster.model import TransactionForecaster
 from ml.forecaster.preprocessing import ForecastPreprocessor
 from ml.config import ml_settings
 
@@ -32,11 +31,35 @@ class ForecastMetrics:
 class ForecastEvaluator:
     def evaluate(
         self,
+        model: TransactionForecaster,
+        test_series: pd.Series,
+        actual_test_balance: pd.Series,
+        last_train_balance: float,
+        plot_dir: Path | None = None,
+    ) -> ForecastMetrics:
+        logger.info("Evaluating forecasting model on reconstructed balance...")
+
+        # Model predicts the flows (not the balance)
+        forecast_df = model.predict(steps=len(test_series))
+        predicted_flows = forecast_df["predicted_y"].values
+
+        # Reconstruct the balance using cumsum
+        y_pred_balance = last_train_balance + np.cumsum(predicted_flows)
+        y_true_balance = actual_test_balance.values
+
+        metrics = self._compute_metrics(y_true_balance, y_pred_balance)
+
+        self._plot_forecast_vs_actual(y_true_balance, y_pred_balance, plot_dir)
+        self._plot_residuals(y_true_balance, y_pred_balance, plot_dir)
+        self._plot_metrics_summary(metrics, plot_dir)
+
+        return metrics
+
+    def _compute_metrics(
+        self,
         y_true: np.ndarray,
         y_pred: np.ndarray,
     ) -> ForecastMetrics:
-        logger.info("Evaluating forecasting model...")
-
         mae = float(mean_absolute_error(y_true, y_pred))
         rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
 
@@ -91,91 +114,6 @@ class ForecastEvaluator:
             bias=bias,
         )
 
-    def evaluate_walk_forward(
-        self,
-        model_factory: Callable[[], object],
-        series: pd.Series,
-        initial_train_size: int = 52,
-        step: int = 4,
-        plot_dir: Path | None = None,
-    ) -> ForecastMetrics:
-        """
-        Walk-forward (expanding window) validation.
-
-        Args:
-            model_factory: Zero-argument callable returning a fresh model instance.
-            series: Full time series.
-            initial_train_size: Observations in first training window.
-            step: Steps to advance per iteration.
-            plot_dir: Directory to save plots. None = show interactively.
-        """
-        logger.info("Starting walk-forward validation...")
-
-        if len(series) <= initial_train_size:
-            logger.warning("Series too short for walk-forward validation.")
-            return ForecastMetrics(
-                mae=0.0,
-                rmse=0.0,
-                wape=0.0,
-                mape=0.0,
-                smape=0.0,
-                r2=0.0,
-                bias=0.0,
-            )
-
-        all_true: list[float] = []
-        all_pred: list[float] = []
-        step_maes: list[float] = []
-        step_indices: list[int] = []
-
-        for i in range(initial_train_size, len(series), step):
-            train_split = series.iloc[:i]
-            test_split = series.iloc[i : i + step]
-
-            try:
-                model = model_factory()
-                model.fit(train_split)
-                forecast_df: pd.DataFrame = model.forecast(
-                    steps=len(test_split)
-                )
-
-                y_true_step = test_split.values
-                y_pred_step = forecast_df["predicted_y"].values
-
-                all_true.extend(y_true_step.tolist())
-                all_pred.extend(y_pred_step.tolist())
-                step_maes.append(
-                    float(mean_absolute_error(y_true_step, y_pred_step))
-                )
-                step_indices.append(i)
-
-            except Exception as error:
-                logger.error("Walk-forward failed at step %s: %s", i, error)
-
-        if not all_true or not all_pred:
-            logger.warning("No successful walk-forward predictions generated.")
-            return ForecastMetrics(
-                mae=0.0,
-                rmse=0.0,
-                wape=0.0,
-                mape=0.0,
-                smape=0.0,
-                r2=0.0,
-                bias=0.0,
-            )
-
-        y_true_arr = np.array(all_true)
-        y_pred_arr = np.array(all_pred)
-
-        metrics = self.evaluate(y_true_arr, y_pred_arr)
-
-        self._plot_forecast_vs_actual(y_true_arr, y_pred_arr, plot_dir)
-        self._plot_residuals(y_true_arr, y_pred_arr, plot_dir)
-        self._plot_step_mae(step_indices, step_maes, plot_dir)
-        self._plot_metrics_summary(metrics, plot_dir)
-
-        return metrics
-
     def _plot_forecast_vs_actual(
         self,
         y_true: np.ndarray,
@@ -184,18 +122,15 @@ class ForecastEvaluator:
     ) -> None:
         fig, ax = plt.subplots(figsize=(12, 4))
 
-        ax.plot(y_true, label="Actual", color="#4C72B0", linewidth=1.5)
+        ax.plot(y_true, label="Actual Balance", color="#4C72B0", linewidth=1.5)
         ax.plot(
             y_pred,
-            label="Forecast",
+            label="Forecast Balance",
             color="#C44E52",
             linewidth=1.5,
             linestyle="--",
         )
-
-        ax.set_title(
-            "Walk-forward: Forecast vs Actual", fontsize=13, fontweight="bold"
-        )
+        ax.set_title("Forecast vs Actual", fontsize=13, fontweight="bold")
         ax.set_xlabel("Step")
         ax.set_ylabel("Value")
         ax.legend()
@@ -248,40 +183,6 @@ class ForecastEvaluator:
         plt.tight_layout()
 
         self._save_or_show(fig, plot_dir, "residuals.png")
-
-    def _plot_step_mae(
-        self,
-        step_indices: list[int],
-        step_maes: list[float],
-        plot_dir: Path | None,
-    ) -> None:
-        fig, ax = plt.subplots(figsize=(10, 4))
-
-        ax.plot(
-            step_indices,
-            step_maes,
-            marker="o",
-            color="#CCB974",
-            linewidth=1.5,
-            markersize=4,
-        )
-        ax.axhline(
-            float(np.mean(step_maes)),
-            color="#C44E52",
-            linewidth=1,
-            linestyle="--",
-            label=f"Mean MAE: {np.mean(step_maes):.2f}",
-        )
-        ax.set_title(
-            "MAE per Walk-forward Step", fontsize=13, fontweight="bold"
-        )
-        ax.set_xlabel("Training window size (observations)")
-        ax.set_ylabel("MAE")
-        ax.legend()
-        ax.grid(alpha=0.3)
-        plt.tight_layout()
-
-        self._save_or_show(fig, plot_dir, "step_mae.png")
 
     def _plot_metrics_summary(
         self,
@@ -349,47 +250,51 @@ def main() -> None:
     print("Loading forecasting dataset...")
 
     loader = ForecastingDataLoader()
-
     df = loader.load()
 
     if df.empty:
         raise ValueError("Forecasting dataset is empty.")
 
     preprocessor = ForecastPreprocessor()
-
-    series_df = preprocessor.prepare_series(
-        df=df,
-        target="expense",
-    )
+    series_df = preprocessor.prepare_series(df)
 
     if series_df.empty:
         raise ValueError("Prepared forecasting series is empty.")
 
     series = series_df.set_index("ds")["y"]
 
-    print(f"Prepared time series with " f"{len(series)} observations.")
+    print(f"Prepared time series with {len(series)} observations.")
+
+    model = TransactionForecaster(ml_settings)
+    model.load_model()
+
+    if model.model is None:
+        raise FileNotFoundError(
+            f"Model not found: {ml_settings.forecaster.model.path}"
+        )
+
+    split_idx = int(len(series) * (1 - ml_settings.data.test_size))
+    train_series = series.iloc[:split_idx]
+    test_series = series.iloc[split_idx:]
+
+    # Calculate actual balances for evaluation
+    last_train_balance = float(train_series.sum())
+    actual_test_balance = last_train_balance + test_series.cumsum()
+
+    print("Running evaluation...")
 
     evaluator = ForecastEvaluator()
 
-    print("Running walk-forward evaluation...")
-
-    metrics = evaluator.evaluate_walk_forward(
-        model_factory=lambda: TransactionForecaster(ml_settings),
-        series=series,
-        initial_train_size=max(
-            14,
-            int(len(series) * 0.6),
-        ),
-        step=max(
-            1,
-            int(len(series) * 0.1),
-        ),
-        plot_dir=Path("artifacts/forecast_evaluation"),
+    metrics = evaluator.evaluate(
+        model=model,
+        test_series=test_series,
+        actual_test_balance=actual_test_balance,
+        last_train_balance=last_train_balance,
+        plot_dir=Path("artifacts/forecaster/evaluation"),
     )
 
     print("\nForecast Evaluation Results")
     print("-" * 40)
-
     print(f"MAE   : {metrics.mae:.4f}")
     print(f"RMSE  : {metrics.rmse:.4f}")
     print(f"WAPE  : {metrics.wape:.4f}")
@@ -398,9 +303,7 @@ def main() -> None:
     print(f"R²    : {metrics.r2:.4f}")
     print(f"Bias  : {metrics.bias:.4f}")
 
-    print("\nPlots saved to:")
-
-    print("artifacts/forecast_evaluation/")
+    print("\nEvaluation completed.")
 
 
 if __name__ == "__main__":

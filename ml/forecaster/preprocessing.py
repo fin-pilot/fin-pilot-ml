@@ -1,113 +1,74 @@
-from typing import Literal
-
-import numpy as np
 import pandas as pd
 
 
 class ForecastPreprocessor:
-    def clean_transactions(self, df: pd.DataFrame) -> pd.DataFrame:
-        if df.empty:
-            return df
+    """
+    Transforms raw transactions into a daily net flow time series.
 
-        df = df.drop_duplicates()
+    Income is positive, expenses are negative.
+    Missing days are forward-filled with 0 to keep the series continuous.
+    Outlier daily changes are capped using IQR.
+    """
 
-        df = df.sort_values(by="transaction_date").reset_index(drop=True)
-
-        return df
-
-    def remove_outliers(self, df: pd.DataFrame) -> pd.DataFrame:
-        if df.empty or len(df) < 10:
-            return df
-
-        q1 = df["y"].quantile(0.25)
-        q3 = df["y"].quantile(0.75)
-
-        iqr = q3 - q1
-
-        lower_bound = max(0.0, q1 - 1.5 * iqr)
-        upper_bound = q3 + 3.0 * iqr
-
-        filtered_df = df[
-            (df["y"] >= lower_bound) & (df["y"] <= upper_bound)
-        ].copy()
-
-        removed = len(df) - len(filtered_df)
-
-        if removed:
-            print(f"Removed {removed} outliers.")
-
-        return filtered_df
-
-    def aggregate_daily_expenses(
-        self,
-        df: pd.DataFrame,
-    ) -> pd.DataFrame:
-        expenses = df[df["transaction_type"] == "expense"].copy()
-
-        if expenses.empty:
-            return pd.DataFrame(columns=["ds", "y"])
-
-        expenses["ds"] = pd.to_datetime(expenses["transaction_date"])
-
-        weekly = (
-            expenses.set_index("ds")
-            .resample("W")["amount"]
-            .sum()
-            .clip(lower=0)
-            .to_frame(name="y")
-        )
-
-        weekly["y"] = weekly["y"].rolling(window=3, min_periods=1).mean()
-
-        return weekly.reset_index()
-
-    def create_balance_series(
-        self,
-        df: pd.DataFrame,
-    ) -> pd.DataFrame:
+    def prepare_series(self, df: pd.DataFrame) -> pd.DataFrame:
         if df.empty:
             return pd.DataFrame(columns=["ds", "y"])
 
         df = df.copy()
+        df = df.drop_duplicates()
+        df = df.sort_values("date").reset_index(drop=True)
 
-        df["ds"] = df["transaction_date"].dt.normalize()
-
-        df["net_amount"] = np.where(
-            df["transaction_type"] == "expense",
-            df["amount"],
-            -df["amount"],
+        # Signed net flow: income positive, expense negative
+        df["ds"] = pd.to_datetime(df["date"]).dt.normalize()
+        df["net"] = df.apply(
+            lambda r: (
+                r["amount"]
+                if r["transaction_type"] == "income"
+                else -r["amount"]
+            ),
+            axis=1,
         )
 
-        daily_net = df.groupby("ds")["net_amount"].sum()
-
-        idx = pd.date_range(
-            start=daily_net.index.min(),
-            end=daily_net.index.max(),
+        # Daily net flow
+        full_index = pd.date_range(
+            start=df["ds"].min(),
+            end=df["ds"].max(),
             freq="D",
         )
-
-        daily_net = daily_net.reindex(
-            idx,
-            fill_value=0.0,
+        daily_net = (
+            df.groupby("ds")["net"].sum().reindex(full_index, fill_value=0.0)
         )
 
-        balance = daily_net.cumsum().reset_index()
+        # Filter outlier daily shocks
+        daily_net = self._cap_outliers(daily_net)
 
-        balance.columns = pd.Index(["ds", "y"])
+        # Return the net flow (NOT the cumsum)
+        flow_series = daily_net.reset_index()
+        flow_series.columns = pd.Index(["ds", "y"])
 
-        return balance
+        print(f"Flow series : {len(flow_series)} daily observations.")
+        print(
+            f"Range       : {flow_series['ds'].iloc[0].date()} → "
+            f"{flow_series['ds'].iloc[-1].date()}"
+        )
 
-    def prepare_series(
-        self,
-        df: pd.DataFrame,
-        target: Literal["expense", "balance"] = "expense",
-    ) -> pd.DataFrame:
-        df = self.clean_transactions(df)
+        return flow_series
 
-        if target == "expense":
-            return self.remove_outliers(self.aggregate_daily_expenses(df))
+    def _cap_outliers(self, series: pd.Series) -> pd.Series:
+        """
+        Caps extreme daily shocks using IQR on the series itself.
+        """
+        q1 = series.quantile(0.25)
+        q3 = series.quantile(0.75)
+        iqr = q3 - q1
 
-        if target == "balance":
-            return self.create_balance_series(df)
+        lower = q1 - 3.0 * iqr
+        upper = q3 + 3.0 * iqr
 
-        raise ValueError(f"Unknown forecasting target: {target!r}")
+        capped = series.clip(lower=lower, upper=upper)
+        n_capped = int(((series < lower) | (series > upper)).sum())
+
+        if n_capped:
+            print(f"Capped {n_capped} outlier daily flows.")
+
+        return capped

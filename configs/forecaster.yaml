@@ -3,15 +3,15 @@ forecaster:
     name: artemkabseu/financial-transactions-dataset-expenses-and-income
 
   model:
-    path: artifacts/forecaster.pkl
+    path: artifacts/forecaster/forecaster.pkl
 
   sarima:
     seasonal: true
 
-    freq: W
-    seasonal_period: 4
+    freq: D
+    seasonal_period: 7
 
-    stepwise: false
+    stepwise: true
     trace: true
 
     error_action: ignore
@@ -19,14 +19,14 @@ forecaster:
 
     information_criterion: aic
 
-    max_p: 7
-    max_q: 7
-    max_d: 2
+    max_p: 3
+    max_q: 3
+    max_d: 1
 
-    max_P: 5
-    max_Q: 5
+    max_P: 2
+    max_Q: 2
     max_D: 1
 
-    n_jobs: -1
+    n_jobs: 1
 
     max_order: null
