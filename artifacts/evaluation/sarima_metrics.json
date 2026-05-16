@@ -1,0 +1,13 @@
+{
+  "mae": 2542.3161,
+  "mse": 9656818.6016,
+  "rmse": 3107.5422,
+  "mape": 3682497914177.9487,
+  "smape": 59.3263,
+  "wape": 52.5643,
+  "r2": -0.0313,
+  "mbe": -45.8438,
+  "residual_mean": 45.8438,
+  "residual_std": 3137.5189,
+  "plots_dir": "artifacts/evaluation"
+}

@@ -1,3 +1,4 @@
+from dataclasses import asdict
 import json
 import logging
 import time
@@ -139,7 +140,7 @@ def main() -> None:
         len(test_data),
     )
 
-    ForecastPlots.train_test_split_plot(
+    ForecastPlots.train_test_split(
         train_data=train_data,
         test_data=test_data,
         output_path=(evaluation_dir / "train_test_split.png"),
@@ -277,21 +278,18 @@ def main() -> None:
         config.models_dir / config.hw_model_file,
     )
 
-    ModelPersistence.save(
-        best_model,
-        config.models_dir / config.best_model_file,
-    )
-
     # =====================================================
     # SAVE SUMMARY
     # =====================================================
-    summary = {
-        model_name: vars(model_metrics)
-        for (
-            model_name,
-            model_metrics,
-        ) in metrics.items()
-    }
+    summary = {}
+
+    for model_name, model_metrics in metrics.items():
+        data = asdict(model_metrics)
+
+        if "plots_dir" in data:
+            data["plots_dir"] = str(data["plots_dir"])
+
+        summary[model_name] = data
 
     with open(
         evaluation_dir / "summary.json",

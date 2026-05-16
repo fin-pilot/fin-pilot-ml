@@ -1,3 +1,4 @@
+from dataclasses import asdict
 import json
 from pathlib import Path
 
@@ -129,8 +130,13 @@ class ForecastEvaluator:
             encoding="utf-8",
         ) as file:
 
+            metrics_dict = asdict(metrics)
+
+            if "plots_dir" in metrics_dict:
+                metrics_dict["plots_dir"] = str(metrics_dict["plots_dir"])
+
             json.dump(
-                metrics.__dict__,
+                metrics_dict,
                 file,
                 indent=2,
                 ensure_ascii=False,
