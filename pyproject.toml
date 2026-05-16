@@ -38,4 +38,7 @@ include = ["ml*"]
 
 [project.scripts]
 train-categorizer = "ml.categorizer.trainer:main"
+evaluate-categorizer = "ml.categorizer.evaluator:main"
+
 train-forecaster = "ml.forecaster.trainer:main"
+evaluate-forecaster = "ml.forecaster.evaluator:main"

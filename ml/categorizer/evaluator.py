@@ -4,6 +4,7 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -19,8 +20,12 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelBinarizer
+
+from ml.categorizer.data_loader import CategorizerDataLoader
+from ml.config import ml_settings
 
 logger = logging.getLogger(__name__)
 
@@ -253,3 +258,46 @@ class CategorizerEvaluator:
         else:
             plt.show()
         plt.close(fig)
+
+
+def main() -> None:
+    print("Loading dataset...")
+
+    loader = CategorizerDataLoader()
+
+    x, y = loader.load()
+
+    _, x_test, _, y_test = train_test_split(
+        x,
+        y,
+        test_size=ml_settings.data.test_size,
+        random_state=ml_settings.data.random_state,
+        stratify=y,
+    )
+
+    model_path = Path(ml_settings.categorizer.model.path)
+
+    print(f"Loading model from {model_path}")
+
+    if not model_path.exists():
+        raise FileNotFoundError(f"Model not found: {model_path}")
+
+    model = joblib.load(model_path)
+
+    print("Evaluating trained model...")
+
+    evaluator = CategorizerEvaluator()
+
+    evaluator.evaluate(
+        model=model,
+        x_test=x_test,
+        y_test=y_test,
+        show_confusion_matrix=True,
+        plot_dir=Path("artifacts/evaluation"),
+    )
+
+    print("Evaluation completed.")
+
+
+if __name__ == "__main__":
+    main()

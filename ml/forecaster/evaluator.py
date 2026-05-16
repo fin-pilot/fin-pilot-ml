@@ -2,14 +2,18 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
+from ml.forecaster.model import TransactionForecaster
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+
+from ml.forecaster.data_loader import ForecastingDataLoader
+from ml.forecaster.preprocessing import ForecastPreprocessor
+from ml.config import ml_settings
 
 logger = logging.getLogger(__name__)
 
@@ -339,3 +343,65 @@ class ForecastEvaluator:
         else:
             plt.show()
         plt.close(fig)
+
+
+def main() -> None:
+    print("Loading forecasting dataset...")
+
+    loader = ForecastingDataLoader()
+
+    df = loader.load()
+
+    if df.empty:
+        raise ValueError("Forecasting dataset is empty.")
+
+    preprocessor = ForecastPreprocessor()
+
+    series_df = preprocessor.prepare_series(
+        df=df,
+        target="expense",
+    )
+
+    if series_df.empty:
+        raise ValueError("Prepared forecasting series is empty.")
+
+    series = series_df.set_index("ds")["y"]
+
+    print(f"Prepared time series with " f"{len(series)} observations.")
+
+    evaluator = ForecastEvaluator()
+
+    print("Running walk-forward evaluation...")
+
+    metrics = evaluator.evaluate_walk_forward(
+        model_factory=lambda: TransactionForecaster(ml_settings),
+        series=series,
+        initial_train_size=max(
+            14,
+            int(len(series) * 0.6),
+        ),
+        step=max(
+            1,
+            int(len(series) * 0.1),
+        ),
+        plot_dir=Path("artifacts/forecast_evaluation"),
+    )
+
+    print("\nForecast Evaluation Results")
+    print("-" * 40)
+
+    print(f"MAE   : {metrics.mae:.4f}")
+    print(f"RMSE  : {metrics.rmse:.4f}")
+    print(f"WAPE  : {metrics.wape:.4f}")
+    print(f"MAPE  : {metrics.mape:.4f}")
+    print(f"sMAPE : {metrics.smape:.4f}")
+    print(f"R²    : {metrics.r2:.4f}")
+    print(f"Bias  : {metrics.bias:.4f}")
+
+    print("\nPlots saved to:")
+
+    print("artifacts/forecast_evaluation/")
+
+
+if __name__ == "__main__":
+    main()
