@@ -22,6 +22,8 @@ dependencies = [
     "datasets",
     "kagglehub",
     "pydantic",
+    "seaborn",
+    "matplotlib",
 ]
 
 [project.optional-dependencies]
