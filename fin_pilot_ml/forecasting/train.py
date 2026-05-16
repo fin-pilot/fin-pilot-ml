@@ -257,11 +257,6 @@ def main() -> None:
         best_model_name,
     )
 
-    if best_model_name == "SARIMA":
-        best_model = sarima_model
-    else:
-        best_model = hw_model
-
     # =====================================================
     # SAVE MODELS
     # =====================================================

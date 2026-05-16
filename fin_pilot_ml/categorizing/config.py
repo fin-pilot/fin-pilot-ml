@@ -4,7 +4,7 @@ from pathlib import Path
 
 @dataclass(slots=True)
 class CategorizingConfig:
-    dataset_name: str = "your-dataset-name"
+    dataset_name: str = "mitulshah/transaction-categorization"
 
     test_size: float = 0.2
 
