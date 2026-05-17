@@ -4,18 +4,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import (
-    mean_absolute_error,
-    mean_squared_error,
-    r2_score,
-)
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-from fin_pilot_ml.forecasting.plots import (
-    ForecastPlots,
-)
-from fin_pilot_ml.forecasting.schemas import (
-    ForecastMetrics,
-)
+from fin_pilot_ml.forecasting.plots import ForecastPlots
+from fin_pilot_ml.forecasting.schemas import ForecastMetrics
 
 
 class ForecastEvaluator:
@@ -26,38 +18,15 @@ class ForecastEvaluator:
         plots_dir: Path,
         model_name: str,
     ) -> ForecastMetrics:
-
-        plots_dir.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        plots_dir.mkdir(parents=True, exist_ok=True)
 
         residuals = actual - predicted
 
-        mae = float(
-            mean_absolute_error(
-                actual,
-                predicted,
-            )
-        )
-
-        mse = float(
-            mean_squared_error(
-                actual,
-                predicted,
-            )
-        )
-
+        mae = float(mean_absolute_error(actual, predicted))
+        mse = float(mean_squared_error(actual, predicted))
         rmse = float(np.sqrt(mse))
-
-        denominator = np.where(
-            actual == 0,
-            1e-8,
-            actual,
-        )
-
+        denominator = np.where(actual == 0, 1e-8, actual)
         mape = float(np.mean(np.abs((actual - predicted) / denominator)) * 100)
-
         smape = float(
             (
                 np.mean(
@@ -68,18 +37,10 @@ class ForecastEvaluator:
             )
             * 100
         )
-
         wape = float(
             (np.sum(np.abs(actual - predicted)) / np.sum(np.abs(actual))) * 100
         )
-
-        r2 = float(
-            r2_score(
-                actual,
-                predicted,
-            )
-        )
-
+        r2 = float(r2_score(actual, predicted))
         mbe = float(np.mean(predicted - actual))
 
         metrics = ForecastMetrics(
@@ -103,43 +64,25 @@ class ForecastEvaluator:
         )
 
         ForecastPlots.actual_vs_forecast(
-            actual,
-            predicted,
-            plots_dir / f"{model_name}_forecast.png",
+            actual, predicted, plots_dir / f"{model_name}_forecast.png"
         )
-
         ForecastPlots.residual_plot(
-            residuals,
-            plots_dir / f"{model_name}_residuals.png",
+            residuals, plots_dir / f"{model_name}_residuals.png"
         )
-
         ForecastPlots.residual_distribution(
-            residuals,
-            plots_dir / f"{model_name}_residual_distribution.png",
+            residuals, plots_dir / f"{model_name}_residual_distribution.png"
         )
-
         ForecastPlots.rolling_error_plot(
-            actual,
-            predicted,
-            plots_dir / f"{model_name}_rolling_error.png",
+            actual, predicted, plots_dir / f"{model_name}_rolling_error.png"
         )
 
         with open(
-            plots_dir / f"{model_name}_metrics.json",
-            "w",
-            encoding="utf-8",
+            plots_dir / f"{model_name}_metrics.json", "w", encoding="utf-8"
         ) as file:
-
             metrics_dict = asdict(metrics)
-
             if "plots_dir" in metrics_dict:
                 metrics_dict["plots_dir"] = str(metrics_dict["plots_dir"])
 
-            json.dump(
-                metrics_dict,
-                file,
-                indent=2,
-                ensure_ascii=False,
-            )
+            json.dump(metrics_dict, file, indent=2, ensure_ascii=False)
 
         return metrics

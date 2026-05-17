@@ -10,10 +10,9 @@ logger = logging.getLogger(__name__)
 class ModelPersistence:
     @staticmethod
     def save(
-        model: Any,
-        path: Path,
+            model: Any,
+            path: Path,
     ) -> None:
-
         path.parent.mkdir(
             parents=True,
             exist_ok=True,

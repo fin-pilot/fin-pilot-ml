@@ -6,8 +6,7 @@ import pandas as pd
 
 class FinanceDatasetLoader:
     def __init__(
-        self,
-        dataset_name: str = "ramyapintchy/personal-finance-data",
+        self, dataset_name: str = "ramyapintchy/personal-finance-data"
     ) -> None:
         self.dataset_name = dataset_name
 
@@ -22,7 +21,6 @@ class FinanceDatasetLoader:
         file_path = os.path.join(path, csv_files[0])
 
         df = pd.read_csv(file_path)
-
         df.columns = df.columns.str.strip()
 
         return df

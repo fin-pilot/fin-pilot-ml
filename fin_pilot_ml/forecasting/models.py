@@ -29,10 +29,7 @@ class ForecastModels:
         return model.fit(disp=False)
 
     @staticmethod
-    def train_holt_winters(
-        train_data: pd.Series,
-        seasonal_period: int,
-    ):
+    def train_holt_winters(train_data: pd.Series, seasonal_period: int):
         model = ExponentialSmoothing(
             train_data,
             trend="add",

@@ -9,12 +9,11 @@ from sklearn.metrics import confusion_matrix
 class CategorizingPlots:
     @staticmethod
     def confusion_matrix_plot(
-        y_true,
-        y_pred,
-        labels,
-        output_path: Path,
+            y_true,
+            y_pred,
+            labels,
+            output_path: Path,
     ) -> None:
-
         cm = confusion_matrix(
             y_true,
             y_pred,
@@ -56,19 +55,18 @@ class CategorizingPlots:
 
     @staticmethod
     def per_class_metrics_plot(
-        report: dict,
-        output_path: Path,
+            report: dict,
+            output_path: Path,
     ) -> None:
-
         classes = [
             key
             for key in report.keys()
             if key
-            not in (
-                "accuracy",
-                "macro avg",
-                "weighted avg",
-            )
+               not in (
+                   "accuracy",
+                   "macro avg",
+                   "weighted avg",
+               )
         ]
 
         df = pd.DataFrame(
@@ -108,10 +106,9 @@ class CategorizingPlots:
 
     @staticmethod
     def metrics_summary_plot(
-        metrics: dict,
-        output_path: Path,
+            metrics: dict,
+            output_path: Path,
     ) -> None:
-
         df = pd.DataFrame(
             {
                 "metric": list(metrics.keys()),

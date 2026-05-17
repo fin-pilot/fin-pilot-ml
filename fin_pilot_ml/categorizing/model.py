@@ -15,19 +15,18 @@ logger = logging.getLogger(__name__)
 
 class TransactionCategorizer:
     def __init__(
-        self,
-        config: CategorizingConfig,
+            self,
+            config: CategorizingConfig,
     ) -> None:
         self.config = config
 
         self.pipeline = self._build_pipeline()
 
     def train(
-        self,
-        x_train: list[str],
-        y_train: list[str],
+            self,
+            x_train: list[str],
+            y_train: list[str],
     ) -> None:
-
         logger.info("Training categorizer model...")
 
         self.pipeline.fit(
@@ -36,10 +35,9 @@ class TransactionCategorizer:
         )
 
     def predict(
-        self,
-        texts: list[str],
+            self,
+            texts: list[str],
     ) -> list[str]:
-
         cleaned = [str(text).lower().strip() for text in texts]
 
         predictions = self.pipeline.predict(
@@ -49,9 +47,8 @@ class TransactionCategorizer:
         return [str(pred) for pred in predictions]
 
     def _build_pipeline(
-        self,
+            self,
     ) -> Pipeline:
-
         return Pipeline(
             [
                 (

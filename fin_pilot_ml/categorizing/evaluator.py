@@ -25,13 +25,12 @@ logger = logging.getLogger(__name__)
 
 class CategorizingEvaluator:
     def evaluate(
-        self,
-        model,
-        x_test,
-        y_test,
-        plots_dir: Path,
+            self,
+            model,
+            x_test,
+            y_test,
+            plots_dir: Path,
     ) -> EvaluationMetrics:
-
         logger.info("Evaluating categorizer...")
 
         plots_dir.mkdir(
@@ -147,7 +146,6 @@ class CategorizingEvaluator:
         metrics_json = plots_dir / "metrics.json"
 
         with open(metrics_json, "w", encoding="utf-8") as file:
-
             json.dump(
                 {
                     **metrics_dict,

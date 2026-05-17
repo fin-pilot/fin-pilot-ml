@@ -5,7 +5,7 @@ import pandas as pd
 from datasets import load_dataset
 
 from fin_pilot_ml.categorizing.config import (
-    CategorizingConfig,
+    CategorizingConfig
 )
 
 logger = logging.getLogger(__name__)
@@ -13,15 +13,14 @@ logger = logging.getLogger(__name__)
 
 class CategorizingDataLoader:
     def __init__(
-        self,
-        config: CategorizingConfig,
+            self,
+            config: CategorizingConfig,
     ) -> None:
         self.config = config
 
     def load(
-        self,
+            self,
     ) -> tuple[pd.Series, pd.Series]:
-
         logger.info(
             "Loading dataset: %s",
             self.config.dataset_name,
