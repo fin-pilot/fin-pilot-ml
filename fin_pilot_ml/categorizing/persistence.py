@@ -9,20 +9,9 @@ logger = logging.getLogger(__name__)
 
 class ModelPersistence:
     @staticmethod
-    def save(
-            model: Any,
-            path: Path,
-    ) -> None:
-        path.parent.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
-
-        logger.info(
-            "Saving model to %s",
-            path,
-        )
-
+    def save(model: Any, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        logger.info("Saving model to %s", path)
         joblib.dump(model, path)
 
     @staticmethod
@@ -30,9 +19,6 @@ class ModelPersistence:
         if not path.exists():
             raise FileNotFoundError(f"Model not found: {path}")
 
-        logger.info(
-            "Loading model from %s",
-            path,
-        )
+        logger.info("Loading model from %s", path)
 
         return joblib.load(path)

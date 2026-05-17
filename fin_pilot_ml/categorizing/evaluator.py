@@ -13,66 +13,35 @@ from sklearn.metrics import (
     recall_score,
 )
 
-from fin_pilot_ml.categorizing.plots import (
-    CategorizingPlots,
-)
-from fin_pilot_ml.categorizing.schemas import (
-    EvaluationMetrics,
-)
+from fin_pilot_ml.categorizing.plots import CategorizingPlots
+from fin_pilot_ml.categorizing.schemas import EvaluationMetrics
 
 logger = logging.getLogger(__name__)
 
 
 class CategorizingEvaluator:
     def evaluate(
-            self,
-            model,
-            x_test,
-            y_test,
-            plots_dir: Path,
+        self, model, x_test, y_test, plots_dir: Path
     ) -> EvaluationMetrics:
         logger.info("Evaluating categorizer...")
 
-        plots_dir.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        plots_dir.mkdir(parents=True, exist_ok=True)
 
         y_pred = model.predict(x_test)
 
         report = classification_report(
-            y_test,
-            y_pred,
-            output_dict=True,
-            zero_division=0,
+            y_test, y_pred, output_dict=True, zero_division=0
         )
 
         metrics_dict = {
-            "accuracy": round(
-                float(
-                    accuracy_score(
-                        y_test,
-                        y_pred,
-                    )
-                ),
-                4,
-            ),
+            "accuracy": round(float(accuracy_score(y_test, y_pred)), 4),
             "balanced_accuracy": round(
-                float(
-                    balanced_accuracy_score(
-                        y_test,
-                        y_pred,
-                    )
-                ),
-                4,
+                float(balanced_accuracy_score(y_test, y_pred)), 4
             ),
             "precision": round(
                 float(
                     precision_score(
-                        y_test,
-                        y_pred,
-                        average="weighted",
-                        zero_division=0,
+                        y_test, y_pred, average="weighted", zero_division=0
                     )
                 ),
                 4,
@@ -80,10 +49,7 @@ class CategorizingEvaluator:
             "recall": round(
                 float(
                     recall_score(
-                        y_test,
-                        y_pred,
-                        average="weighted",
-                        zero_division=0,
+                        y_test, y_pred, average="weighted", zero_division=0
                     )
                 ),
                 4,
@@ -91,66 +57,34 @@ class CategorizingEvaluator:
             "f1_score": round(
                 float(
                     f1_score(
-                        y_test,
-                        y_pred,
-                        average="weighted",
-                        zero_division=0,
+                        y_test, y_pred, average="weighted", zero_division=0
                     )
                 ),
                 4,
             ),
-            "mcc": round(
-                float(
-                    matthews_corrcoef(
-                        y_test,
-                        y_pred,
-                    )
-                ),
-                4,
-            ),
-            "kappa": round(
-                float(
-                    cohen_kappa_score(
-                        y_test,
-                        y_pred,
-                    )
-                ),
-                4,
-            ),
+            "mcc": round(float(matthews_corrcoef(y_test, y_pred)), 4),
+            "kappa": round(float(cohen_kappa_score(y_test, y_pred)), 4),
         }
 
-        logger.info(
-            "Evaluation metrics: %s",
-            metrics_dict,
-        )
+        logger.info("Evaluation metrics: %s", metrics_dict)
 
         labels = sorted(y_test.unique().tolist())
 
         CategorizingPlots.confusion_matrix_plot(
-            y_test,
-            y_pred,
-            labels,
-            plots_dir / "confusion_matrix.png",
+            y_test, y_pred, labels, plots_dir / "confusion_matrix.png"
         )
-
         CategorizingPlots.per_class_metrics_plot(
-            report,
-            plots_dir / "per_class_metrics.png",
+            report, plots_dir / "per_class_metrics.png"
         )
-
         CategorizingPlots.metrics_summary_plot(
-            metrics_dict,
-            plots_dir / "metrics_summary.png",
+            metrics_dict, plots_dir / "metrics_summary.png"
         )
 
         metrics_json = plots_dir / "metrics.json"
 
         with open(metrics_json, "w", encoding="utf-8") as file:
             json.dump(
-                {
-                    **metrics_dict,
-                    "classification_report": (report),
-                },
+                {**metrics_dict, "classification_report": (report)},
                 file,
                 indent=2,
             )

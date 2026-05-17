@@ -16,7 +16,6 @@ from fin_pilot_ml.forecasting.preprocessing import ExpensePreprocessor
 from fin_pilot_ml.forecasting.tuner import SarimaTuner
 
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
-
 warnings.filterwarnings(
     "ignore", message=("Non-invertible starting seasonal " "moving average")
 )
@@ -91,10 +90,8 @@ def main() -> None:
         logger.info("Running SARIMA tuning...")
 
         tuner = SarimaTuner(config)
-        (
-            best_order,
-            best_seasonal_order,
-        ) = tuner.tune(train_data)
+
+        best_order, best_seasonal_order = tuner.tune(train_data)
 
         logger.info(
             "Best SARIMA params | " "order=%s seasonal=%s",
@@ -108,9 +105,7 @@ def main() -> None:
             order=best_order,
             seasonal_order=(best_seasonal_order),
         )
-        sarima_forecast = sarima_model.forecast(
-            steps=len(test_data),
-        )
+        sarima_forecast = sarima_model.forecast(steps=len(test_data))
         sarima_forecast.index = test_data.index
     else:
         logger.warning("Skipping SARIMA due to " "insufficient observations.")
@@ -155,8 +150,7 @@ def main() -> None:
     logger.info("Saving models...")
     if sarima_model is not None:
         ModelPersistence.save(
-            sarima_model,
-            config.models_dir / config.sarima_model_file,
+            sarima_model, config.models_dir / config.sarima_model_file
         )
 
     ModelPersistence.save(hw_model, config.models_dir / config.hw_model_file)
@@ -170,12 +164,7 @@ def main() -> None:
         summary[model_name] = data
 
     with open(evaluation_dir / "summary.json", "w", encoding="utf-8") as file:
-        json.dump(
-            summary,
-            file,
-            indent=2,
-            ensure_ascii=False,
-        )
+        json.dump(summary, file, indent=2, ensure_ascii=False)
 
     metadata = {
         "observations": len(series),
@@ -197,7 +186,6 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-
     except (ValueError, RuntimeError, OSError):
         logger.exception("Forecasting pipeline failed.")
         raise

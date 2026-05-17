@@ -52,14 +52,8 @@ class ForecastEvaluator:
             wape=round(wape, 4),
             r2=round(r2, 4),
             mbe=round(mbe, 4),
-            residual_mean=round(
-                float(residuals.mean()),
-                4,
-            ),
-            residual_std=round(
-                float(residuals.std()),
-                4,
-            ),
+            residual_mean=round(float(residuals.mean()), 4),
+            residual_std=round(float(residuals.std()), 4),
             plots_dir=plots_dir,
         )
 

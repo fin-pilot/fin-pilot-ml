@@ -123,7 +123,5 @@ class ForecastPlots:
         plt.close()
 
     @staticmethod
-    def _ensure_parent(
-        output_path: Path,
-    ) -> None:
+    def _ensure_parent(output_path: Path) -> None:
         output_path.parent.mkdir(parents=True, exist_ok=True)
