@@ -1,7 +1,0 @@
-{
-  "observations": 261,
-  "train_size": 209,
-  "test_size": 52,
-  "seasonal_period": 4,
-  "best_model": "SARIMA"
-}
