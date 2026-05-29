@@ -8,9 +8,11 @@ version = "1.0.0"
 description = "ML pipelines for transaction categorization and SARIMA-based expense forecasting"
 readme = "README.md"
 requires-python = ">=3.10"
+
 authors = [
     { name = "Oleksii Palamarchuk", email = "oleksiypalamarchuck@gmail.com" },
 ]
+
 dependencies = [
     "pandas",
     "numpy",
@@ -27,18 +29,25 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["black", "pylint"]
+dev = [
+    "black",
+    "pylint",
+]
+
+[project.scripts]
+train-categorizer = "fin_pilot_ml.categorizing.train:main"
+evaluate-categorizer = "fin_pilot_ml.categorizing.evaluator:main"
+
+train-forecaster = "fin_pilot_ml.forecasting.train:main"
+evaluate-forecaster = "fin_pilot_ml.forecasting.evaluator:main"
 
 [tool.black]
 line-length = 80
 skip-string-normalization = false
 
 [tool.setuptools.packages.find]
-include = ["ml*"]
+where = ["."]
+include = ["fin_pilot_ml*"]
 
-[project.scripts]
-train-categorizer = "ml.categorizer.trainer:main"
-evaluate-categorizer = "ml.categorizer.evaluator:main"
-
-train-forecaster = "ml.forecaster.trainer:main"
-evaluate-forecaster = "ml.forecaster.evaluator:main"
+[tool.setuptools]
+include-package-data = true
