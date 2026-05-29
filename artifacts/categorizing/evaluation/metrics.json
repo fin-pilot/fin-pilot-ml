@@ -1,0 +1,84 @@
+{
+  "accuracy": 0.9894,
+  "balanced_accuracy": 0.9894,
+  "precision": 0.9894,
+  "recall": 0.9894,
+  "f1_score": 0.9894,
+  "mcc": 0.9882,
+  "kappa": 0.9882,
+  "classification_report": {
+    "Charity & Donations": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 90027.0
+    },
+    "Entertainment & Recreation": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 89899.0
+    },
+    "Financial Services": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 90192.0
+    },
+    "Food & Dining": {
+      "precision": 0.9966162666516778,
+      "recall": 0.989596588752707,
+      "f1-score": 0.9930940232215569,
+      "support": 89586.0
+    },
+    "Government & Legal": {
+      "precision": 0.9885255435268856,
+      "recall": 0.9796945312673184,
+      "f1-score": 0.984090225898752,
+      "support": 90222.0
+    },
+    "Healthcare & Medical": {
+      "precision": 0.96682072752977,
+      "recall": 0.9881406230896622,
+      "f1-score": 0.9773644228972219,
+      "support": 89971.0
+    },
+    "Income": {
+      "precision": 0.9850347583337895,
+      "recall": 0.9985462051515387,
+      "f1-score": 0.9917444641617159,
+      "support": 90109.0
+    },
+    "Shopping & Retail": {
+      "precision": 0.9720817363300297,
+      "recall": 0.9526159043428013,
+      "f1-score": 0.9622503844556445,
+      "support": 89988.0
+    },
+    "Transportation": {
+      "precision": 0.9988392796772522,
+      "recall": 0.9865104010150589,
+      "f1-score": 0.9926365596214688,
+      "support": 89847.0
+    },
+    "Utilities & Services": {
+      "precision": 0.9865458599283029,
+      "recall": 0.9988602160056658,
+      "f1-score": 0.9926648484581886,
+      "support": 90368.0
+    },
+    "accuracy": 0.989401350130914,
+    "macro avg": {
+      "precision": 0.9894464171977708,
+      "recall": 0.9893964469624752,
+      "f1-score": 0.9893844928714548,
+      "support": 900209.0
+    },
+    "weighted avg": {
+      "precision": 0.9894419201403785,
+      "recall": 0.989401350130914,
+      "f1-score": 0.9893846957019667,
+      "support": 900209.0
+    }
+  }
+}
