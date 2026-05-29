@@ -17,9 +17,9 @@ class ForecastingConfig:
     D_values: tuple[int, ...] = (0, 1)
     Q_values: tuple[int, ...] = (0, 1)
 
-    artifacts_dir: Path = Path("artifacts")
-    models_dir: Path = Path("artifacts/models")
-    plots_dir: Path = Path("artifacts/plots")
+    artifacts_dir: Path = Path("artifacts/forecasting")
+    models_dir: Path = Path("artifacts/forecasting/models")
+    evaluation_dir: Path = Path("artifacts/forecasting/evaluation")
 
     sarima_model_file: str = "sarima.pkl"
     hw_model_file: str = "holt_winters.pkl"

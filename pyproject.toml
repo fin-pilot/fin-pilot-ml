@@ -22,7 +22,7 @@ dependencies = [
     "joblib",
     "pyarrow",
     "datasets",
-    "kagglehub",
+    "kaggle",
     "pydantic",
     "seaborn",
     "matplotlib",

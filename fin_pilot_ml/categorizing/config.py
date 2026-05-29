@@ -9,8 +9,10 @@ class CategorizingConfig:
     test_size: float = 0.2
     random_state: int = 42
 
-    model_path: Path = Path("artifacts/categorizing/model.pkl")
     artifacts_dir: Path = Path("artifacts/categorizing")
+    models_dir: Path = Path("artifacts/categorizing/models")
+    evaluation_dir: Path = Path("artifacts/categorizing/evaluation")
+    model_path: Path = Path("artifacts/categorizing/models/model.pkl")
 
     analyzer: str = "word"
     ngram_range: tuple[int, int] = (1, 2)

@@ -49,8 +49,10 @@ def main() -> None:
 
     config = ForecastingConfig()
 
-    evaluation_dir = config.artifacts_dir / "evaluation"
+    evaluation_dir = config.evaluation_dir
     evaluation_dir.mkdir(parents=True, exist_ok=True)
+    models_dir = config.models_dir
+    models_dir.mkdir(parents=True, exist_ok=True)
 
     logger.info("Loading dataset...")
 
@@ -150,10 +152,10 @@ def main() -> None:
     logger.info("Saving models...")
     if sarima_model is not None:
         ModelPersistence.save(
-            sarima_model, config.models_dir / config.sarima_model_file
+            sarima_model, models_dir / config.sarima_model_file
         )
 
-    ModelPersistence.save(hw_model, config.models_dir / config.hw_model_file)
+    ModelPersistence.save(hw_model, models_dir / config.hw_model_file)
 
     summary = {}
     for model_name, model_metrics in metrics.items():

@@ -45,7 +45,7 @@ class CategorizingTrainer:
             model=self.model.pipeline,
             x_test=x_test,
             y_test=y_test,
-            plots_dir=(self.config.artifacts_dir / "evaluation"),
+            plots_dir=self.config.evaluation_dir,
         )
 
         logger.info("Final metrics: %s", metrics)
